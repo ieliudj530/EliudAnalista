@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analista de Compras Inteligente</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;800&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <div class="cv-wrapper">
+        <aside class="sidebar">
+            <div class="profile-container">
+                <div class="img-border">
+                    📈
+                </div>
+                <h1>Analista</h1>
+                <span class="role">Inteligencia de Negocios</span>
+            </div>
+
+            <ul class="sidebar-nav">
+                <li onclick="showView('upload')" id="nav-upload" class="active">1. Cargar Datos</li>
+                <li onclick="showView('config')" id="nav-config">2. Analizar</li>
+                <li onclick="showView('dashboard')" id="nav-dashboard">3. Resultados</li>
+            </ul>
+
+            <div class="contact-info">
+                <h3>Estado</h3>
+                <ul>
+                    <li id="status-text">Esperando archivo...</li>
+                </ul>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            
+            <section id="view-upload">
+                <h2 class="section-title">Importar Compras</h2>
+                <div class="summary-section">
+                    <p>Sube tu reporte mensual de compras (Excel o CSV). El sistema detectará automáticamente las fechas y productos.</p>
+                </div>
+
+                <div class="data-card" style="text-align: center; padding: 50px;">
+                    <input type="file" id="fileInput" accept=".csv, .xlsx" style="display: none;">
+                    <button class="btn-neon" onclick="document.getElementById('fileInput').click()">
+                        📂 Seleccionar Archivo
+                    </button>
+                    <p id="fileName" style="margin-top: 15px; color: var(--accent); font-weight: bold;"></p>
+                </div>
+            </section>
+
+            <section id="view-config" class="hidden">
+                <h2 class="section-title">Nuevo Análisis</h2>
+                
+                <div class="data-card">
+                    <div class="form-group">
+                        <label>¿Qué quieres analizar hoy?</label>
+
+                        <select id="analysisType" class="form-control" onchange="updateConfigForm()">
+                            <optgroup label="📅 Análisis Temporal">
+                            <option value="evolution_product">Evolución de Gasto (Línea de Tiempo)</option>
+        <option value="total_monthly">Gasto Total de Empresa (Mensual)</option>
+        <option value="frequency_monthly">Frecuencia de Compras (Conteo por Mes)</option>
+    </optgroup>
+    <optgroup label="📊 Ranking y Comparativas">
+        <option value="comparison_category">Top Productos más Caros (Barras)</option>
+        <option value="top_suppliers">Top Proveedores (Ranking Horizontal)</option>
+        <option value="distribution_pie">Distribución de Gastos % (Dona)</option>
+    </optgroup>
+</select>
+                        
+                    </div>
+
+                    <div id="configFields"></div>
+
+                    <div style="margin-top: 30px; display: flex; gap: 10px;">
+                        <button class="btn-neon" onclick="generateChart()">➕ Generar Gráfico</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="view-dashboard" class="hidden">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 class="section-title">Tablero de Control</h2>
+                    <div class="no-print">
+                        <button class="btn-neon secondary" onclick="printDashboard()">🖨️ Imprimir</button>
+                        <button class="btn-neon" onclick="showView('config')">+ Nuevo Análisis</button>
+                    </div>
+                </div>
+
+                <div id="dashboard-container" class="dashboard-grid">
+                    </div>
+
+                <div id="pagination-controls" class="no-print" style="display: flex; justify-content: center; align-items: center; gap: 20px; margin-top: 30px; padding: 20px;">
+                    <button class="btn-neon secondary" id="btnPrevPage" onclick="changePage(-1)">⬅️ Anterior</button>
+                    <span id="pageIndicator" style="font-weight: bold; color: var(--primary-dark);">Página 1</span>
+                    <button class="btn-neon secondary" id="btnNextPage" onclick="changePage(1)">Siguiente ➡️</button>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    
+    <script src="main.js"></script>
+</body>
+</html>
