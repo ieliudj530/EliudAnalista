@@ -1,16 +1,16 @@
-/* main.js - Versión BI Completa (6 Tipos de Análisis) */
+/* main.js - Versión Universal (Estudiantes, Estadística, Negocios) */
 
 // --- ESTADO GLOBAL ---
 let globalData = [];
 let headers = [];
 let chartInstances = {};
 
-// --- ESTADO DE PAGINACIÓN ---
+// --- PAGINACIÓN ---
 let savedCharts = []; 
 let currentPage = 1;
-const itemsPerPage = 4;
+let itemsPerPage = 4; // Configurable
 
-// Activamos plugins
+// Plugins
 Chart.register(ChartDataLabels);
 
 // --- NAVEGACIÓN ---
@@ -19,7 +19,6 @@ function showView(viewId) {
         document.getElementById(id).classList.add('hidden');
     });
     document.getElementById(`view-${viewId}`).classList.remove('hidden');
-    // Actualizar menú
     document.querySelectorAll('.sidebar-nav li').forEach(li => li.classList.remove('active'));
     const navItem = document.getElementById(`nav-${viewId}`);
     if(navItem) navItem.classList.add('active');
@@ -33,14 +32,16 @@ function handleFileSelect(evt) {
     if (!file) return;
 
     document.getElementById('fileName').innerText = `Archivo: ${file.name}`;
-    document.getElementById('status-text').innerText = "Procesando...";
+    document.getElementById('status-text').innerText = "Leyendo datos...";
 
     const reader = new FileReader();
+    const handleData = (data) => processData(data);
+
     if (file.name.endsWith('.csv')) {
         reader.onload = (e) => {
             Papa.parse(e.target.result, {
                 header: true, skipEmptyLines: true,
-                complete: (results) => processData(results.data)
+                complete: (results) => handleData(results.data)
             });
         };
         reader.readAsText(file);
@@ -50,7 +51,7 @@ function handleFileSelect(evt) {
             const workbook = XLSX.read(data, { type: 'array' });
             const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
             const jsonData = XLSX.utils.sheet_to_json(firstSheet, { defval: "" });
-            processData(jsonData);
+            handleData(jsonData);
         };
         reader.readAsArrayBuffer(file);
     }
@@ -59,6 +60,7 @@ function handleFileSelect(evt) {
 function processData(data) {
     if (!data || data.length === 0) { alert("Archivo vacío."); return; }
     
+    // Normalizar datos (quitar espacios en headers)
     globalData = data.map(row => {
         const newRow = {};
         Object.keys(row).forEach(key => newRow[key.trim()] = row[key]);
@@ -66,12 +68,12 @@ function processData(data) {
     });
 
     headers = Object.keys(globalData[0]);
-    document.getElementById('status-text').innerText = `Datos: ${globalData.length} filas`;
+    document.getElementById('status-text').innerText = `Dataset: ${globalData.length} registros`;
     updateConfigForm();
     showView('config');
 }
 
-// --- CONFIGURACIÓN DE FORMULARIO (WIZARD) ---
+// --- CONFIGURACIÓN UNIVERSAL ---
 function updateConfigForm() {
     const type = document.getElementById('analysisType').value;
     const container = document.getElementById('configFields');
@@ -86,140 +88,127 @@ function updateConfigForm() {
 
     // 1. Evolución Temporal (Línea)
     if (type === 'evolution_product') {
-        html += createSelect('colDate', 'Columna FECHA');
-        html += createSelect('colProduct', 'Columna PRODUCTO');
-        html += createSelect('colValue', 'Columna VALOR (Dinero)');
+        html += createSelect('colDate', 'Columna FECHA / TIEMPO');
+        html += createSelect('colProduct', 'Columna CATEGORÍA (Variable a filtrar)');
+        html += createSelect('colValue', 'Columna VALOR (Numérico a sumar)');
         html += `<div class="form-group" style="background:#f8fafc; padding:10px; border:1px dashed #cbd5e1;">
-                <label style="color:var(--accent);">Filtro Producto</label>
-                <button class="btn-neon secondary" style="width:100%; margin-bottom:5px;" onclick="loadUniqueValues('colProduct', 'targetProduct')">🔄 Cargar Lista</button>
-                <select id="targetProduct" class="form-control"><option value="">(Esperar carga...)</option></select></div>`;
+                <label style="color:var(--accent);">Filtrar por Específico:</label>
+                <button class="btn-neon secondary" style="width:100%; margin-bottom:5px;" onclick="loadUniqueValues('colProduct', 'targetProduct')">🔄 Cargar Lista de Valores</button>
+                <select id="targetProduct" class="form-control"><option value="">(Selecciona columna y pulsa cargar)</option></select></div>`;
     }
     // 2. Total Mensual (Barras)
     else if (type === 'total_monthly') {
-        html += createSelect('colDate', 'Columna FECHA');
-        html += createSelect('colValue', 'Columna VALOR (Dinero)');
+        html += createSelect('colDate', 'Columna FECHA / TIEMPO');
+        html += createSelect('colValue', 'Columna VALOR (Numérico)');
     }
-    // 3. Frecuencia de Compra (Línea/Barras)
+    // 3. Frecuencia (Conteo)
     else if (type === 'frequency_monthly') {
-        html += createSelect('colDate', 'Columna FECHA');
-        html += `<p style="font-size:0.8rem; color:#64748b;">Contaremos cuántas transacciones se hicieron por mes.</p>`;
+        html += createSelect('colDate', 'Columna FECHA / TIEMPO');
+        html += `<p style="font-size:0.8rem; color:#64748b;">Se contarán cuántos registros existen por cada periodo de tiempo.</p>`;
     }
-    // 4. Comparativa Productos (Barras Verticales)
+    // 4. Comparativa (Top Vertical)
     else if (type === 'comparison_category') {
-        html += createSelect('colProduct', 'Columna PRODUCTO');
-        html += createSelect('colValue', 'Columna VALOR');
+        html += createSelect('colProduct', 'Columna CATEGORÍA (Eje X)');
+        html += createSelect('colValue', 'Columna VALOR (Eje Y)');
     }
-    // 5. Top Proveedores (Barras Horizontales)
+    // 5. Ranking Horizontal
     else if (type === 'top_suppliers') {
-        html += createSelect('colSupplier', 'Columna PROVEEDOR');
-        html += createSelect('colValue', 'Columna VALOR');
+        html += createSelect('colSupplier', 'Columna GRUPO / ITEM (Eje Y)');
+        html += createSelect('colValue', 'Columna VALOR (Eje X)');
     }
     // 6. Distribución (Dona)
     else if (type === 'distribution_pie') {
-        html += createSelect('colCategory', 'Columna CATEGORÍA / TIPO');
-        html += createSelect('colValue', 'Columna VALOR');
+        html += createSelect('colCategory', 'Columna CATEGORÍA (Variable)');
+        html += createSelect('colValue', 'Columna VALOR (Numérico)');
     }
 
-    html += `<div class="form-group"><label>Título del Gráfico</label><input type="text" id="chartTitle" class="form-control" placeholder="Ej: Análisis de Compras"></div>`;
+    html += `<div class="form-group"><label>Título del Gráfico</label><input type="text" id="chartTitle" class="form-control" placeholder="Ej: Resultados Encuesta 2024"></div>`;
     container.innerHTML = html;
 }
 
-// Carga valores únicos para filtros
 function loadUniqueValues(sourceId, targetId) {
     const colName = document.getElementById(sourceId).value;
     const selectTarget = document.getElementById(targetId);
     const unique = [...new Set(globalData.map(item => item[colName]))].sort();
-    if(unique.length === 0) { alert("Sin datos."); return; }
+    if(unique.length === 0) { alert("Columna vacía."); return; }
     selectTarget.innerHTML = unique.map(u => `<option value="${u}">${u}</option>`).join('');
 }
 
-// --- GENERACIÓN DE DATOS (LÓGICA MATEMÁTICA) ---
+// --- GENERACIÓN DE DATOS ---
 function generateChart() {
     const type = document.getElementById('analysisType').value;
     const title = document.getElementById('chartTitle').value || 'Sin Título';
+    const isCurrency = document.getElementById('isCurrency').checked; // Checkbox nuevo
     
     let labels = [], dataValues = [], chartType = 'bar', axisIndex = 'x';
-    let backgroundColors = null; // Para Pie/Dona
+    let backgroundColors = null;
 
     try {
-        // Lógica 1: Evolución Producto
+        // Lógica Genérica
+        const getVal = (row, col) => cleanNumber(row[col]);
+        const getKey = (row, col) => row[col] || "Otros";
+        const getDate = (row, col) => parseDateToMonth(row[col]);
+
         if (type === 'evolution_product') {
             const colDate = document.getElementById('colDate').value;
             const colVal = document.getElementById('colValue').value;
             const colProd = document.getElementById('colProduct').value;
             const target = document.getElementById('targetProduct').value;
-            if (!target) { alert("Elige un producto."); return; }
+            if (!target) { alert("Debes seleccionar un valor específico para filtrar."); return; }
 
             const filtered = globalData.filter(row => row[colProd] == target);
             const grouped = {};
             filtered.forEach(row => {
-                const k = parseDateToMonth(row[colDate]);
-                grouped[k] = (grouped[k] || 0) + cleanNumber(row[colVal]);
+                const k = getDate(row, colDate);
+                grouped[k] = (grouped[k] || 0) + getVal(row, colVal);
             });
-            const keys = Object.keys(grouped).sort();
-            labels = keys; dataValues = keys.map(k => grouped[k]);
+            labels = Object.keys(grouped).sort();
+            dataValues = labels.map(k => grouped[k]);
             chartType = 'line';
         }
-        // Lógica 2: Comparativa (Top 10)
         else if (type === 'comparison_category') {
             const colProd = document.getElementById('colProduct').value;
             const colVal = document.getElementById('colValue').value;
             const grouped = {};
-            globalData.forEach(row => {
-                const k = row[colProd] || "Otros";
-                grouped[k] = (grouped[k] || 0) + cleanNumber(row[colVal]);
-            });
-            // Top 10 Mayor a Menor
+            globalData.forEach(row => grouped[getKey(row, colProd)] = (grouped[getKey(row, colProd)] || 0) + getVal(row, colVal));
             const sorted = Object.entries(grouped).sort((a,b)=>b[1]-a[1]).slice(0,10);
             labels = sorted.map(e=>e[0]); dataValues = sorted.map(e=>e[1]);
         }
-        // Lógica 3: Total Mensual
         else if (type === 'total_monthly') {
             const colDate = document.getElementById('colDate').value;
             const colVal = document.getElementById('colValue').value;
             const grouped = {};
             globalData.forEach(row => {
-                const k = parseDateToMonth(row[colDate]);
-                grouped[k] = (grouped[k] || 0) + cleanNumber(row[colVal]);
+                const k = getDate(row, colDate);
+                grouped[k] = (grouped[k] || 0) + getVal(row, colVal);
             });
-            const keys = Object.keys(grouped).sort();
-            labels = keys; dataValues = keys.map(k => grouped[k]);
+            labels = Object.keys(grouped).sort();
+            dataValues = labels.map(k => grouped[k]);
         }
-        // Lógica 4: Frecuencia (Conteo)
         else if (type === 'frequency_monthly') {
             const colDate = document.getElementById('colDate').value;
             const grouped = {};
             globalData.forEach(row => {
-                const k = parseDateToMonth(row[colDate]);
-                grouped[k] = (grouped[k] || 0) + 1; // Sumamos 1 por cada fila
+                const k = getDate(row, colDate);
+                grouped[k] = (grouped[k] || 0) + 1; // Conteo simple
             });
-            const keys = Object.keys(grouped).sort();
-            labels = keys; dataValues = keys.map(k => grouped[k]);
-            chartType = 'bar'; // Puede ser línea también
+            labels = Object.keys(grouped).sort();
+            dataValues = labels.map(k => grouped[k]);
         }
-        // Lógica 5: Top Proveedores (Horizontal)
         else if (type === 'top_suppliers') {
             const colSupp = document.getElementById('colSupplier').value;
             const colVal = document.getElementById('colValue').value;
             const grouped = {};
-            globalData.forEach(row => {
-                const k = row[colSupp] || "Desconocido";
-                grouped[k] = (grouped[k] || 0) + cleanNumber(row[colVal]);
-            });
+            globalData.forEach(row => grouped[getKey(row, colSupp)] = (grouped[getKey(row, colSupp)] || 0) + getVal(row, colVal));
             const sorted = Object.entries(grouped).sort((a,b)=>b[1]-a[1]).slice(0,10);
             labels = sorted.map(e=>e[0]); dataValues = sorted.map(e=>e[1]);
-            axisIndex = 'y'; // Barras Horizontales
+            axisIndex = 'y';
         }
-        // Lógica 6: Distribución (Dona)
         else if (type === 'distribution_pie') {
             const colCat = document.getElementById('colCategory').value;
             const colVal = document.getElementById('colValue').value;
             const grouped = {};
-            globalData.forEach(row => {
-                const k = row[colCat] || "Otros";
-                grouped[k] = (grouped[k] || 0) + cleanNumber(row[colVal]);
-            });
-            // Top 8 + Otros (Para que la dona no explote de secciones)
+            globalData.forEach(row => grouped[getKey(row, colCat)] = (grouped[getKey(row, colCat)] || 0) + getVal(row, colVal));
             let sorted = Object.entries(grouped).sort((a,b)=>b[1]-a[1]);
             if (sorted.length > 8) {
                 const top8 = sorted.slice(0,8);
@@ -233,7 +222,6 @@ function generateChart() {
 
         if (labels.length === 0) { alert("Sin datos resultantes."); return; }
 
-        // Guardar configuración
         const newChartConfig = {
             id: 'chart_' + Date.now() + Math.random(),
             title: title,
@@ -241,7 +229,8 @@ function generateChart() {
             labels: labels,
             dataValues: dataValues,
             indexAxis: axisIndex,
-            bgColors: backgroundColors // Guardamos colores si es dona
+            bgColors: backgroundColors,
+            isCurrency: isCurrency // Guardamos preferencia de formato
         };
 
         savedCharts.push(newChartConfig);
@@ -249,10 +238,19 @@ function generateChart() {
         renderCurrentPage();
         showView('dashboard');
 
-    } catch (e) { console.error(e); alert("Error procesando datos."); }
+    } catch (e) { console.error(e); alert("Error procesando. Revisa los tipos de datos."); }
 }
 
 // --- RENDERIZADO VISUAL ---
+
+// Cambiar cantidad por página
+function updatePaginationSettings() {
+    const val = document.getElementById('itemsPerPageSelect').value;
+    itemsPerPage = parseInt(val);
+    currentPage = 1;
+    renderCurrentPage();
+}
+
 function renderCurrentPage() {
     const container = document.getElementById('dashboard-container');
     container.innerHTML = ''; 
@@ -264,7 +262,6 @@ function renderCurrentPage() {
 
     chartsToShow.forEach(config => drawChartCard(config));
 
-    // Controles Paginación
     document.getElementById('pageIndicator').innerText = `Página ${savedCharts.length===0?0:currentPage} de ${totalPages}`;
     document.getElementById('btnPrevPage').disabled = (currentPage === 1);
     document.getElementById('btnNextPage').disabled = (currentPage === totalPages || totalPages === 0);
@@ -281,7 +278,7 @@ function changePage(d) {
 function drawChartCard(config) {
     const container = document.getElementById('dashboard-container');
     
-    // Filtro zoom solo para fechas
+    // Filtro zoom fechas
     let controlsHtml = '';
     const isDateData = config.labels[0] && config.labels[0].toString().match(/^\d{4}-\d{2}$/);
     if (isDateData && config.labels.length > 1) {
@@ -299,23 +296,27 @@ function drawChartCard(config) {
 
     const card = document.createElement('div');
     card.className = 'data-card';
+    if(itemsPerPage === 1) card.style.height = "600px"; // Más altura si es detalle
+
     card.innerHTML = `
-        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:5px; align-items:center;">
             <h3 style="color:var(--primary-dark); font-size:0.95rem; font-weight:700;">${config.title}</h3>
-            <button class="btn-neon danger" style="padding:2px 6px; font-size:0.7rem;" onclick="deleteChart('${config.id}')">X</button>
+            <div>
+                <button class="btn-neon secondary" style="padding:2px 6px; font-size:0.7rem; margin-right:5px;" title="Descargar PNG" onclick="downloadChartImage('${config.id}', '${config.title}')">⬇️ PNG</button>
+                <button class="btn-neon danger" style="padding:2px 6px; font-size:0.7rem;" onclick="deleteChart('${config.id}')">X</button>
+            </div>
         </div>
         ${controlsHtml}
-        <div class="chart-wrapper"><canvas id="${config.id}"></canvas></div>
+        <div class="chart-wrapper" style="${itemsPerPage===1 ? 'height:500px;' : ''}"><canvas id="${config.id}"></canvas></div>
     `;
     container.appendChild(card);
 
     const ctx = document.getElementById(config.id).getContext('2d');
     
-    // Determinar colores
+    // Colores
     let bg, border;
     if (config.type === 'doughnut' || config.type === 'pie') {
-        bg = config.bgColors;
-        border = '#ffffff';
+        bg = config.bgColors; border = '#ffffff';
     } else if (config.type === 'line') {
         const g = ctx.createLinearGradient(0,0,0,300);
         g.addColorStop(0, 'rgba(6, 182, 212, 0.5)'); g.addColorStop(1, 'rgba(6, 182, 212, 0.0)');
@@ -339,25 +340,28 @@ function drawChartCard(config) {
             }]
         },
         options: {
-            indexAxis: config.indexAxis || 'x', // Soporte para barras horizontales
+            indexAxis: config.indexAxis || 'x',
             responsive: true,
             maintainAspectRatio: false,
             layout: { padding: { top: 20, right: 20 } },
             plugins: {
-                legend: { display: (config.type === 'doughnut') }, // Solo mostrar leyenda en dona
+                legend: { display: (config.type === 'doughnut') },
                 datalabels: {
                     display: true,
                     align: (config.type==='doughnut')?'center':(config.indexAxis==='y'?'end':'end'),
                     anchor: (config.type==='doughnut')?'center':(config.indexAxis==='y'?'end':'end'),
                     color: '#334155', font: { weight: 'bold', size: 10 },
                     formatter: (v) => {
-                         // Formato condicional: Si es entero pequeño (frecuencia) sin decimales, si es dinero con símbolo
-                         if (v < 1000 && v % 1 === 0 && config.title.includes('Frecuencia')) return v; 
-                         return new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL', maximumFractionDigits:0 }).format(v);
+                         // FORMATO INTELIGENTE: Si seleccionó "Es Dinero" usa divisa, si no, usa decimal
+                         if (config.isCurrency) {
+                            return new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL', maximumFractionDigits:0 }).format(v);
+                         } else {
+                            return new Intl.NumberFormat('es-ES', { maximumFractionDigits: 1 }).format(v);
+                         }
                     }
                 }
             },
-            scales: (config.type === 'doughnut') ? {} : { // Dona no tiene ejes
+            scales: (config.type === 'doughnut') ? {} : {
                 y: { beginAtZero: true, grid: {color:'#f1f5f9'} },
                 x: { grid: {display:false} }
             }
@@ -368,20 +372,24 @@ function drawChartCard(config) {
     chartInstances[config.id] = chart;
 }
 
-// Actualizar rango (Zoom)
 window.updateChartRange = function(id) {
     const chart = chartInstances[id];
     if (!chart) return;
     const s = parseInt(document.getElementById(`start_${id}`).value);
     const e = parseInt(document.getElementById(`end_${id}`).value);
     if (s > e) return;
-    
     chart.data.labels = chart.originalConfig.labels.slice(s, e + 1);
     chart.data.datasets[0].data = chart.originalConfig.dataValues.slice(s, e + 1);
     chart.update();
 }
 
-// Eliminar
+function downloadChartImage(id, title) {
+    const link = document.createElement('a');
+    link.download = title + '.png';
+    link.href = document.getElementById(id).toDataURL('image/png', 1.0);
+    link.click();
+}
+
 function deleteChart(id) {
     if(!confirm("¿Eliminar?")) return;
     savedCharts = savedCharts.filter(c => c.id !== id);
@@ -391,7 +399,6 @@ function deleteChart(id) {
 
 function printDashboard() { window.print(); }
 
-// Utils & Helpers
 function cleanNumber(v) {
     if(typeof v==='number') return v;
     if(!v) return 0;
@@ -400,6 +407,7 @@ function cleanNumber(v) {
     else s = s.replace(/,/g,'');
     return parseFloat(s)||0;
 }
+
 function parseDateToMonth(d) {
     if(!d) return "ND";
     let date;
@@ -413,11 +421,11 @@ function parseDateToMonth(d) {
     if(!date || isNaN(date.getTime())) return "Fecha Inv";
     return `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2,'0')}`;
 }
-// Generador de colores neón para el gráfico de dona
+
 function generatePalette(count) {
     const colors = ['#06b6d4', '#0f172a', '#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b', '#ef4444'];
     while (colors.length < count) {
-        colors.push('#' + Math.floor(Math.random()*16777215).toString(16)); // Random si faltan
+        colors.push('#' + Math.floor(Math.random()*16777215).toString(16));
     }
     return colors.slice(0, count);
 }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analista de Compras Inteligente</title>
+    <title>Gemini Data Studio</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;800&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
@@ -14,22 +14,22 @@
         <aside class="sidebar">
             <div class="profile-container">
                 <div class="img-border">
-                    📈
+                    📊
                 </div>
-                <h1>Analista</h1>
-                <span class="role">Inteligencia de Negocios</span>
+                <h1>Data Studio</h1>
+                <span class="role">Análisis Universal</span>
             </div>
 
             <ul class="sidebar-nav">
-                <li onclick="showView('upload')" id="nav-upload" class="active">1. Cargar Datos</li>
-                <li onclick="showView('config')" id="nav-config">2. Analizar</li>
-                <li onclick="showView('dashboard')" id="nav-dashboard">3. Resultados</li>
+                <li onclick="showView('upload')" id="nav-upload" class="active">1. Cargar Dataset</li>
+                <li onclick="showView('config')" id="nav-config">2. Configurar</li>
+                <li onclick="showView('dashboard')" id="nav-dashboard">3. Visualizar</li>
             </ul>
 
             <div class="contact-info">
                 <h3>Estado</h3>
                 <ul>
-                    <li id="status-text">Esperando archivo...</li>
+                    <li id="status-text">Esperando datos...</li>
                 </ul>
             </div>
         </aside>
@@ -37,9 +37,9 @@
         <main class="main-content">
             
             <section id="view-upload">
-                <h2 class="section-title">Importar Compras</h2>
+                <h2 class="section-title">Importar Datos</h2>
                 <div class="summary-section">
-                    <p>Sube tu reporte mensual de compras (Excel o CSV). El sistema detectará automáticamente las fechas y productos.</p>
+                    <p>Sube cualquier tabla de datos (Encuestas, Ventas, Registros Médicos, etc.). El sistema admite archivos Excel (.xlsx) o CSV.</p>
                 </div>
 
                 <div class="data-card" style="text-align: center; padding: 50px;">
@@ -52,28 +52,33 @@
             </section>
 
             <section id="view-config" class="hidden">
-                <h2 class="section-title">Nuevo Análisis</h2>
+                <h2 class="section-title">Diseñar Gráfico</h2>
                 
                 <div class="data-card">
                     <div class="form-group">
-                        <label>¿Qué quieres analizar hoy?</label>
-
+                        <label>¿Qué tipo de análisis deseas realizar?</label>
                         <select id="analysisType" class="form-control" onchange="updateConfigForm()">
-                            <optgroup label="📅 Análisis Temporal">
-                            <option value="evolution_product">Evolución de Gasto (Línea de Tiempo)</option>
-        <option value="total_monthly">Gasto Total de Empresa (Mensual)</option>
-        <option value="frequency_monthly">Frecuencia de Compras (Conteo por Mes)</option>
-    </optgroup>
-    <optgroup label="📊 Ranking y Comparativas">
-        <option value="comparison_category">Top Productos más Caros (Barras)</option>
-        <option value="top_suppliers">Top Proveedores (Ranking Horizontal)</option>
-        <option value="distribution_pie">Distribución de Gastos % (Dona)</option>
-    </optgroup>
-</select>
-                        
+                            <optgroup label="📅 Análisis Temporal (Series de Tiempo)">
+                                <option value="evolution_product">Evolución de una Variable en el Tiempo</option>
+                                <option value="total_monthly">Suma Total por Periodo (Mes/Día)</option>
+                                <option value="frequency_monthly">Frecuencia / Conteo por Periodo</option>
+                            </optgroup>
+                            <optgroup label="📊 Ranking y Distribución">
+                                <option value="comparison_category">Comparativa Vertical (Top N)</option>
+                                <option value="top_suppliers">Ranking Horizontal (Top N)</option>
+                                <option value="distribution_pie">Distribución Porcentual (Dona/Pie)</option>
+                            </optgroup>
+                        </select>
                     </div>
 
                     <div id="configFields"></div>
+
+                    <div class="form-group" style="margin-top:15px;">
+                        <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                            <input type="checkbox" id="isCurrency" style="width:20px; height:20px;">
+                            <span>¿Los datos son Dinero? (Formato Moneda)</span>
+                        </label>
+                    </div>
 
                     <div style="margin-top: 30px; display: flex; gap: 10px;">
                         <button class="btn-neon" onclick="generateChart()">➕ Generar Gráfico</button>
@@ -82,11 +87,21 @@
             </section>
 
             <section id="view-dashboard" class="hidden">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2 class="section-title">Tablero de Control</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap:wrap; gap:10px;">
+                    <h2 class="section-title">Tablero</h2>
+                    
+                    <div class="no-print" style="display:flex; gap:10px; align-items:center;">
+                        <label style="margin:0; font-weight:bold;">Ver:</label>
+                        <select id="itemsPerPageSelect" class="form-control" style="width:auto; padding:5px; height:35px;" onchange="updatePaginationSettings()">
+                            <option value="1">1 por pantalla (Detalle)</option>
+                            <option value="4" selected>4 por pantalla (Rejilla)</option>
+                            <option value="100">Todas juntas</option>
+                        </select>
+                    </div>
+
                     <div class="no-print">
-                        <button class="btn-neon secondary" onclick="printDashboard()">🖨️ Imprimir</button>
-                        <button class="btn-neon" onclick="showView('config')">+ Nuevo Análisis</button>
+                        <button class="btn-neon secondary" onclick="printDashboard()">🖨️ Imprimir PDF</button>
+                        <button class="btn-neon" onclick="showView('config')">+ Nuevo</button>
                     </div>
                 </div>
 
