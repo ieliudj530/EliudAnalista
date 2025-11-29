@@ -1,28 +1,36 @@
-/* AlephGraf Final - Gold Professional & Mobile Ready */
+/* --- 1. VARIABLES Y TEMA (Gold & Dark Professional) --- */
 :root {
-    /* Paleta */
-    --primary-dark: #252423;       /* Sidebar Oscuro */
-    --accent: #ffc107;             /* Amarillo Gold (Tu marca) */
-    --accent-hover: #e0a800;
-    --bg-body: #eaeaea;            /* Fondo gris claro */
-    --text-main: #323130;          /* Texto principal */
-    --text-muted: #605e5c;
-    --card-border: #d2d0ce;
+    /* Paleta de Colores */
+    --primary-dark: #1a1a1a;       /* Sidebar: Negro suave elegante */
+    --accent: #ffc107;             /* Amarillo Oro (Tu Marca) */
+    --accent-hover: #e0a800;       /* Amarillo más oscuro al pasar mouse */
+    --accent-text: #212529;        /* Texto oscuro sobre el amarillo (para leer bien) */
     
-    /* Variable para responsividad */
+    --bg-body: #f3f4f6;            /* Fondo gris muy claro (Estilo Dashboard) */
+    --text-main: #333333;          /* Texto principal */
+    --text-muted: #666666;         /* Texto secundario */
+    --card-border: #e5e7eb;        /* Bordes muy sutiles */
+    
+    /* Configuración Layout */
     --sidebar-width: 260px;
 }
 
+/* --- 2. CONFIGURACIÓN BASE --- */
 body {
     background-color: var(--bg-body);
     font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     color: var(--text-main);
-    overflow-x: hidden;
+    overflow-x: hidden; /* Evita scroll horizontal */
+    margin: 0;
 }
 
-h1, h2, h3, h4, h5, h6 { font-weight: 600; margin-bottom: 0; }
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    margin-bottom: 0;
+    color: #111;
+}
 
-/* --- LAYOUT PRINCIPAL --- */
+/* --- 3. ESTRUCTURA PRINCIPAL (LAYOUT) --- */
 #wrapper {
     display: flex;
     width: 100%;
@@ -30,118 +38,235 @@ h1, h2, h3, h4, h5, h6 { font-weight: 600; margin-bottom: 0; }
     transition: all 0.3s ease;
 }
 
-/* SIDEBAR */
+/* BARRA LATERAL (SIDEBAR) */
 #sidebar-wrapper {
     min-height: 100vh;
     width: var(--sidebar-width);
     background-color: var(--primary-dark);
     color: #fff;
-    position: fixed;
+    position: fixed; /* Siempre visible a la izquierda */
     left: 0;
     top: 0;
     z-index: 1000;
-    transition: all 0.3s ease;
-    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Animación suave */
+    box-shadow: 4px 0 10px rgba(0,0,0,0.1);
     overflow-y: auto;
 }
 
+/* Cabecera del Sidebar (Logo) */
 .sidebar-heading {
-    padding: 1.2rem;
-    height: 70px;
-    display: flex; align-items: center; gap: 15px;
-    background-color: rgba(0,0,0,0.2);
-    border-bottom: 1px solid #333;
+    padding: 1.5rem;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background-color: rgba(255,255,255,0.03);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 
-.sidebar-logo { font-size: 1.5rem; color: var(--accent); }
+.sidebar-logo {
+    font-size: 1.6rem;
+    color: var(--accent); /* Icono Dorado */
+}
 
-/* MENU ITEMS */
+/* Enlaces del Menú */
 .list-group-item {
     background: transparent;
-    color: #bbb;
+    color: #a0a0a0;
     border: none;
-    padding: 14px 20px;
+    padding: 14px 24px;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s;
-    display: flex; align-items: center;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
     font-size: 0.95rem;
-    border-left: 4px solid transparent;
+    border-left: 4px solid transparent; /* Línea invisible inactiva */
 }
 
-.list-group-item i { font-size: 1.2rem; margin-right: 15px; min-width: 25px; text-align: center; }
-.list-group-item:hover { background-color: #333; color: white; }
+.list-group-item i {
+    font-size: 1.2rem;
+    margin-right: 15px;
+    min-width: 25px;
+    text-align: center;
+    transition: color 0.2s;
+}
 
+.list-group-item:hover {
+    background-color: rgba(255,255,255,0.05);
+    color: #fff;
+}
+
+/* Estado Activo (Seleccionado) */
 .list-group-item.active {
-    background-color: #333;
-    color: white;
-    border-left-color: var(--accent); /* Línea Amarilla */
+    background-color: rgba(255, 193, 7, 0.1); /* Fondo amarillo muy sutil */
+    color: #fff;
+    border-left-color: var(--accent); /* Línea Amarilla visible */
+    font-weight: 600;
 }
-.list-group-item.active i { color: var(--accent); }
 
-/* CONTENIDO */
+.list-group-item.active i {
+    color: var(--accent); /* Icono se pone amarillo */
+}
+
+/* CONTENEDOR DE PÁGINA */
 #page-content-wrapper {
     width: 100%;
-    margin-left: var(--sidebar-width);
+    margin-left: var(--sidebar-width); /* Deja espacio para el sidebar */
     transition: all 0.3s ease;
     padding: 0;
 }
 
-/* --- COMPONENTES UI --- */
-.btn-aleph {
-    background-color: var(--accent); color: #212529; font-weight: 700;
-    border: none; border-radius: 2px; padding: 6px 16px;
-}
-.btn-aleph:hover { background-color: var(--accent-hover); }
+/* --- 4. COMPONENTES DE INTERFAZ (UI) --- */
 
+/* Botones AlephGraf (Amarillos) */
+.btn-aleph {
+    background-color: var(--accent);
+    color: var(--accent-text);
+    font-weight: 700;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.1s;
+}
+
+.btn-aleph:hover {
+    background-color: var(--accent-hover);
+    color: var(--accent-text);
+    transform: translateY(-1px);
+}
+
+/* Botones Secundarios */
+.btn-outline-secondary {
+    border-color: #ccc;
+    color: #555;
+}
+.btn-outline-secondary:hover {
+    background-color: #f0f0f0;
+    color: #000;
+    border-color: #bbb;
+}
+
+/* Tarjetas (Estilo Power BI limpio) */
 .card {
     border: 1px solid var(--card-border);
-    border-radius: 4px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     background: white;
     margin-bottom: 20px;
+    transition: box-shadow 0.3s;
 }
+
+.card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08); /* Sombra suave al pasar mouse */
+}
+
 .card-header {
-    background: white; border-bottom: 1px solid #f0f0f0;
-    padding: 12px 15px; font-size: 1rem; color: var(--text-main);
+    background: white;
+    border-bottom: 1px solid #f0f0f0;
+    padding: 12px 20px;
+    font-size: 1rem;
+    color: var(--text-main);
+    font-weight: 600;
 }
 
-.form-select, .form-control { border-radius: 2px; border-color: #999; font-size: 0.9rem; }
-.form-select:focus, .form-control:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.25); }
+.card-body {
+    padding: 20px;
+}
 
-/* --- RESPONSIVE (MÓVIL) --- */
-#menu-toggle { display: none; } /* Oculto en PC */
+/* Formularios y Selectores */
+.form-select, .form-control {
+    border-radius: 4px;
+    border: 1px solid #ced4da;
+    font-size: 0.9rem;
+    padding: 0.5rem 0.8rem;
+}
+
+.form-select:focus, .form-control:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.2); /* Resplandor amarillo */
+    outline: none;
+}
+
+/* Filtros dentro de las gráficas (más sutiles) */
+.card-body select.form-select-sm {
+    background-color: #f9fafb;
+    border: 1px solid #eee;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+/* --- 5. RESPONSIVIDAD (MÓVIL) --- */
+
+/* Botón Hamburguesa (Oculto por defecto en PC) */
+#menu-toggle {
+    display: none;
+}
 
 @media (max-width: 768px) {
-    /* 1. Sidebar Oculto */
-    #sidebar-wrapper { left: calc(var(--sidebar-width) * -1); }
+    /* 1. Ocultar Sidebar sacándolo de la pantalla */
+    #sidebar-wrapper {
+        left: calc(var(--sidebar-width) * -1);
+    }
     
-    /* 2. Contenido Full */
-    #page-content-wrapper { margin-left: 0; }
+    /* 2. El contenido ocupa todo el ancho */
+    #page-content-wrapper {
+        margin-left: 0;
+    }
     
-    /* 3. Botón Visible */
+    /* 3. Mostrar botón de menú */
     #menu-toggle {
-        display: block; background: transparent; border: none; font-size: 1.5rem; cursor: pointer; padding: 0 15px;
+        display: block;
+        background: transparent;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 0 15px;
+        color: #333;
     }
 
-    /* 4. Clase Toggled (Menú Abierto) */
-    #wrapper.toggled #sidebar-wrapper { left: 0; box-shadow: 5px 0 15px rgba(0,0,0,0.5); }
+    /* 4. CLASE "TOGGLED": Cuando se abre el menú en móvil */
+    #wrapper.toggled #sidebar-wrapper {
+        left: 0; /* Vuelve a entrar */
+        box-shadow: 10px 0 20px rgba(0,0,0,0.5); /* Sombra fuerte para destacar */
+    }
     
-    /* Fondo oscuro al abrir menú */
+    /* Efecto oscurecer fondo */
     #wrapper.toggled #page-content-wrapper::before {
-        content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.5); z-index: 999;
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 999;
+        backdrop-filter: blur(2px);
     }
 }
 
-/* Utils */
-.fade-in { animation: fadeIn 0.4s ease-in; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-.badge-gold { background-color: var(--accent); color: #212529; }
+/* --- 6. UTILIDADES Y ANIMACIONES --- */
 
+.fade-in {
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Ocultar elementos al imprimir */
 @media print {
     #sidebar-wrapper, .no-print, nav { display: none !important; }
     #page-content-wrapper { width: 100%; margin: 0; padding: 0; }
-    .card { break-inside: avoid; border: 1px solid #ccc; box-shadow: none; }
-    .card-body select { display: none; }
+    .card { 
+        break-inside: avoid; 
+        border: 1px solid #ccc; 
+        box-shadow: none; 
+        margin-bottom: 20px;
+    }
+    /* Ocultar dropdowns en el papel */
+    .card-body select, .card-body label { display: none; }
 }

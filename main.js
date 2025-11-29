@@ -1,4 +1,4 @@
-/* main.js - AlephGraf Pro v5.2 (Clean & Mobile Ready) */
+/* main.js - AlephGraf Pro v5.5 (Final Full Version) */
 
 // --- 1. VARIABLES GLOBALES ---
 let globalData = [];
@@ -9,57 +9,74 @@ let currentPage = 1;
 let itemsPerPage = 4;
 let activeChartInstances = {};
 
-// --- 2. CONFIGURACIÓN DE GRÁFICOS (Estilo Profesional) ---
+// --- 2. CONFIGURACIÓN DE GRÁFICOS (Chart.js) ---
 Chart.register(ChartDataLabels);
+
+// Estilo de Fuente Global (Windows/Office style)
 Chart.defaults.font.family = "'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
 Chart.defaults.color = '#555';
 Chart.defaults.scale.grid.color = '#f0f0f0';
 
-// Paleta de Colores: Gris Azulado, Oro, Rojo, Verde, Violeta...
-const seriesPalette = ['#2c3e50', '#f39c12', '#c0392b', '#27ae60', '#8e44ad', '#2980b9', '#7f8c8d', '#d35400'];
+// Paleta de Colores para Series (Gris Azulado, Oro, Rojo, Verde, etc.)
+const seriesPalette = [
+    '#2c3e50', // Gris Oscuro (Principal)
+    '#f39c12', // Amarillo Oro (Tu Marca)
+    '#c0392b', // Rojo Ladrillo
+    '#27ae60', // Verde Bosque
+    '#8e44ad', // Violeta
+    '#2980b9', // Azul
+    '#d35400', // Naranja
+    '#7f8c8d'  // Gris
+];
 
-// --- 3. NAVEGACIÓN Y MENÚ MÓVIL ---
+// --- 3. NAVEGACIÓN Y MENÚ ---
 
-// Cambiar entre pantallas (Carga, Studio, Dashboard)
 function showView(viewId) {
-    // Ocultar todas
-    ['view-upload', 'view-studio', 'view-dashboard'].forEach(id => {
+    // Ocultar todas las vistas
+    const views = ['view-upload', 'view-studio', 'view-dashboard'];
+    views.forEach(id => {
         document.getElementById(id).classList.add('d-none');
     });
-    // Mostrar la elegida
+
+    // Mostrar la vista seleccionada
     document.getElementById(`view-${viewId}`).classList.remove('d-none');
     
-    // Actualizar clase activa en el menú lateral
-    document.querySelectorAll('.list-group-item').forEach(li => li.classList.remove('active'));
+    // Actualizar el menú lateral (PC)
+    document.querySelectorAll('.list-group-item').forEach(li => {
+        li.classList.remove('active');
+    });
+    
     const navItem = document.getElementById('nav-' + viewId.replace('view-', ''));
-    if (navItem) navItem.classList.add('active');
+    if (navItem) {
+        navItem.classList.add('active');
+    }
 }
 
-// Abrir/Cerrar menú lateral (Botón Hamburguesa)
+// Función para abrir/cerrar menú en móvil
 function toggleMenu() {
     const wrapper = document.getElementById("wrapper");
     wrapper.classList.toggle("toggled");
 }
 
-// Cerrar menú automáticamente al hacer clic en un link (Solo en móvil)
+// Función para cerrar menú automáticamente al hacer clic (UX Móvil)
 function toggleMenuMobile() {
     if (window.innerWidth < 768) {
         document.getElementById("wrapper").classList.remove("toggled");
     }
 }
 
-// --- 4. CARGA DE ARCHIVOS ---
+// --- 4. CARGA DE DATOS ---
 
 document.getElementById('fileInput').addEventListener('change', (evt) => {
     const file = evt.target.files[0];
     if (!file) return;
 
     document.getElementById('fileName').innerText = file.name;
-    updateStatus('Procesando...', 'warning');
+    updateStatus('Procesando datos...', 'warning');
 
     const reader = new FileReader();
     
-    // Función callback cuando termina de leer
+    // Procesador central
     const done = (data) => processData(data);
 
     if (file.name.endsWith('.csv')) {
@@ -84,11 +101,11 @@ document.getElementById('fileInput').addEventListener('change', (evt) => {
 
 function processData(data) {
     if (!data || data.length === 0) {
-        alert("El archivo está vacío o no se pudo leer.");
+        alert("El archivo parece estar vacío.");
         return;
     }
 
-    // Normalizar claves (quitar espacios en nombres de columnas)
+    // Limpiar claves (quitar espacios en nombres de columnas)
     globalData = data.map(row => {
         const newRow = {};
         Object.keys(row).forEach(key => {
@@ -100,10 +117,7 @@ function processData(data) {
     headers = Object.keys(globalData[0]);
     updateStatus('Datos Conectados', 'success');
     
-    // Inicializar selectores del Studio
     initStudioControls();
-    
-    // Ir a la pantalla de diseño
     showView('studio');
 }
 
@@ -111,16 +125,15 @@ function updateStatus(msg, type) {
     const el = document.getElementById('status-text');
     const icon = document.getElementById('status-icon');
     el.innerText = msg;
-    // Cambiar color del icono según estado
-    icon.style.color = type === 'success' ? '#ffc107' : '#666';
+    // Amarillo para éxito, gris para espera
+    icon.style.color = (type === 'success') ? '#ffc107' : '#666';
 }
 
-// --- 5. LÓGICA DEL STUDIO (CONFIGURACIÓN) ---
+// --- 5. LÓGICA DEL STUDIO (Controles) ---
 
 function initStudioControls() {
     const fillSelect = (id) => {
         const sel = document.getElementById(id);
-        // Filtros y Leyenda tienen opción vacía
         const isOptional = (id === 'filterCol' || id === 'legendCol');
         sel.innerHTML = isOptional ? '<option value="">(Ninguno)</option>' : '';
         
@@ -144,7 +157,7 @@ function loadFilterValues() {
     
     if (!col) return;
 
-    // Obtener valores únicos para el filtro
+    // Detectar valores únicos para llenar el filtro
     const uniqueValues = [...new Set(globalData.map(r => r[col]))].sort();
     
     uniqueValues.forEach(val => {
@@ -159,18 +172,18 @@ function resetStudio() {
     document.getElementById('preview-area').classList.add('d-none');
 }
 
-// --- 6. CEREBRO MATEMÁTICO (Matriz de Datos) ---
+// --- 6. MOTOR MATEMÁTICO (Pivot / Matriz) ---
 
 function calculateMatrix(config, overrideFilterVal = null) {
     let dataset = globalData;
     
-    // A. Aplicar Filtro (Si existe)
+    // 1. APLICAR FILTRO
     const activeFilterVal = overrideFilterVal !== null ? overrideFilterVal : config.filterVal;
 
     if (config.filterCol && activeFilterVal && activeFilterVal !== "") {
         dataset = dataset.filter(row => {
             const rowVal = row[config.filterCol];
-            // Si el valor es una fecha formateada (YYYY-MM), comparamos especial
+            // Lógica especial para fechas YYYY-MM
             if (typeof activeFilterVal === 'string' && activeFilterVal.match(/^\d{4}-\d{2}$/)) {
                 return parseDate(rowVal, 'iso') === activeFilterVal;
             }
@@ -178,35 +191,36 @@ function calculateMatrix(config, overrideFilterVal = null) {
         });
     }
 
-    // B. Inicializar Agrupación
+    // 2. AGRUPAR DATOS
     const grouped = {}; 
     const legendsSet = new Set();
-    const rowTotals = {}; // Para ordenar de mayor a menor después
+    const rowTotals = {}; // Usado para ordenar de mayor a menor
 
     dataset.forEach(row => {
-        // Obtener clave de Fila (Eje X)
+        // Eje X (Filas)
         let rowKey = row[config.groupCol] || "ND";
         if (config.dateMode === 'month') rowKey = parseDate(row[config.groupCol], 'month');
         if (config.dateMode === 'year') rowKey = parseDate(row[config.groupCol], 'year');
 
-        // Obtener clave de Columna (Leyenda/Serie)
+        // Leyenda (Columnas/Series)
         let legendKey = config.legendCol ? (row[config.legendCol] || "ND") : "Total";
         legendsSet.add(legendKey);
 
-        // Obtener Valor Numérico
+        // Valor Numérico
         let val = (config.operation === 'count') ? 1 : cleanNumber(row[config.valueCol]);
 
-        // Sumar
+        // Inicializar estructura
         if (!grouped[rowKey]) grouped[rowKey] = {};
         if (!grouped[rowKey][legendKey]) grouped[rowKey][legendKey] = 0;
         
+        // Sumar
         grouped[rowKey][legendKey] += val;
         
-        // Acumular total de la fila
+        // Acumular total de fila para ordenamiento
         rowTotals[rowKey] = (rowTotals[rowKey] || 0) + val;
     });
 
-    // C. Ordenar Eje X
+    // 3. ORDENAR EJE X
     const labels = Object.keys(grouped);
     if (config.dateMode !== 'none') {
         labels.sort(); // Cronológico si es fecha
@@ -214,7 +228,7 @@ function calculateMatrix(config, overrideFilterVal = null) {
         labels.sort((a, b) => rowTotals[b] - rowTotals[a]); // Mayor a menor si es texto
     }
 
-    // D. Preparar Series para el Gráfico
+    // 4. PREPARAR SERIES
     const legends = Array.from(legendsSet).sort();
     
     const datasets = legends.map((legend, i) => {
@@ -222,14 +236,14 @@ function calculateMatrix(config, overrideFilterVal = null) {
             return grouped[label][legend] || 0;
         });
         
-        // Color: Si hay leyenda usa la paleta, si no usa el color principal
+        // Color: Si hay leyenda usa paleta variada, si no usa el color corporativo oscuro
         let color = config.legendCol ? seriesPalette[i % seriesPalette.length] : '#2c3e50';
         
         return {
             label: legend,
             data: data,
             backgroundColor: color,
-            borderColor: '#fff',
+            borderColor: '#ffffff',
             borderWidth: config.legendCol ? 1 : 0
         };
     });
@@ -238,17 +252,6 @@ function calculateMatrix(config, overrideFilterVal = null) {
 }
 
 // --- 7. VISTA PREVIA Y GUARDADO ---
-
-function calculatePreview() {
-    const config = getConfigFromUI();
-    if (!config.groupCol || !config.valueCol) {
-        alert("Por favor selecciona al menos el Eje X y la Columna de Valor.");
-        return;
-    }
-    
-    pivotData = calculateMatrix(config);
-    renderPreviewTable(pivotData);
-}
 
 function getConfigFromUI() {
     return {
@@ -262,18 +265,30 @@ function getConfigFromUI() {
     };
 }
 
+function calculatePreview() {
+    const config = getConfigFromUI();
+    
+    if (!config.groupCol || !config.valueCol) {
+        alert("Error: Debes seleccionar al menos el Eje X y la Columna de Valor.");
+        return;
+    }
+    
+    pivotData = calculateMatrix(config);
+    renderPreviewTable(pivotData);
+}
+
 function renderPreviewTable(data) {
     const thead = document.querySelector('#previewTable thead');
     const tbody = document.querySelector('#previewTable tbody');
     tbody.innerHTML = '';
     
-    // Crear Cabecera
+    // Encabezados
     let headHtml = `<tr><th>${document.getElementById('groupCol').value}</th>`;
     data.legends.forEach(l => headHtml += `<th class="text-end">${l}</th>`);
     headHtml += '</tr>';
     thead.innerHTML = headHtml;
 
-    // Crear Cuerpo (Primeras 8 filas)
+    // Cuerpo (Primeras 8 filas para no saturar)
     data.labels.slice(0, 8).forEach(label => {
         let rowHtml = `<tr><td>${label}</td>`;
         data.legends.forEach(legend => {
@@ -284,7 +299,12 @@ function renderPreviewTable(data) {
         tbody.innerHTML += rowHtml;
     });
     
-    // Mostrar tabla
+    // Aviso si hay más datos
+    if (data.labels.length > 8) {
+        const colSpan = data.legends.length + 1;
+        tbody.innerHTML += `<tr><td colspan="${colSpan}" class="text-center small text-muted">... y ${data.labels.length - 8} filas más ...</td></tr>`;
+    }
+
     document.getElementById('preview-area').classList.remove('d-none');
 }
 
@@ -295,12 +315,14 @@ function saveToDashboard() {
     config.chartType = document.getElementById('chartType').value;
 
     savedCharts.push(config);
+    
+    // Ir a la última página
     currentPage = Math.ceil(savedCharts.length / itemsPerPage);
     renderCurrentPage();
     showView('dashboard');
 }
 
-// --- 8. RENDERIZADO DEL DASHBOARD ---
+// --- 8. DASHBOARD INTERACTIVO ---
 
 function updatePaginationSettings() {
     itemsPerPage = parseInt(document.getElementById('itemsPerPageSelect').value);
@@ -312,6 +334,9 @@ function renderCurrentPage() {
     const container = document.getElementById('dashboard-container');
     container.innerHTML = '';
     
+    const totalPages = Math.ceil(savedCharts.length / itemsPerPage) || 1;
+    if (currentPage > totalPages) currentPage = totalPages;
+
     const start = (currentPage - 1) * itemsPerPage;
     const end = start + itemsPerPage;
     
@@ -326,10 +351,10 @@ function createChartCard(config, container) {
     const colClass = itemsPerPage === 1 ? 'col-12' : 'col-md-6';
     const height = itemsPerPage === 1 ? '500px' : '320px';
 
-    // Generar Dropdown de Filtro Interactivo
+    // Generar Dropdown de Filtro Interactivo (Si aplica)
     let filterHtml = '';
     if (config.filterCol) {
-        // Encontrar valores únicos para llenar el select
+        // Buscar un valor de muestra para saber si es fecha
         const sampleVal = globalData.find(r => r[config.filterCol])?.[config.filterCol];
         const isDate = isDateColumn(sampleVal);
         
@@ -354,7 +379,7 @@ function createChartCard(config, container) {
             </div>`;
     }
 
-    const cardHtml = `
+    const html = `
     <div class="${colClass}">
         <div class="card h-100 shadow-sm">
             <div class="card-header bg-white d-flex justify-content-between py-2 align-items-center">
@@ -365,9 +390,9 @@ function createChartCard(config, container) {
                         <i class="bi bi-three-dots-vertical"></i>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
-                        <li><a class="dropdown-item small" onclick="downloadImg('${config.id}')"><i class="bi bi-download me-2"></i>Descargar PNG</a></li>
+                        <li><a class="dropdown-item small" href="#" onclick="downloadImg('${config.id}')"><i class="bi bi-download me-2"></i>Descargar PNG</a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item small text-danger" onclick="delChart('${config.id}')"><i class="bi bi-trash me-2"></i>Eliminar</a></li>
+                        <li><a class="dropdown-item small text-danger" href="#" onclick="delChart('${config.id}')"><i class="bi bi-trash me-2"></i>Eliminar</a></li>
                     </ul>
                 </div>
             </div>
@@ -380,16 +405,16 @@ function createChartCard(config, container) {
         </div>
     </div>`;
     
-    container.innerHTML += cardHtml;
+    container.innerHTML += html;
     
-    // Dibujar gráfico con pequeño retraso para asegurar que el canvas existe
+    // Dibujar con delay para asegurar que el HTML existe
     setTimeout(() => {
         const data = calculateMatrix(config);
         drawChart(config, data);
     }, 50);
 }
 
-// Función llamada al cambiar el dropdown del dashboard
+// Función global para actualizar desde el dropdown
 window.updateLiveChart = function(id, val) {
     const config = savedCharts.find(c => c.id === id);
     if (!config) return;
@@ -398,19 +423,19 @@ window.updateLiveChart = function(id, val) {
     drawChart(config, data);
 };
 
-// --- 9. DIBUJADO DE GRÁFICOS (CHART.JS) ---
+// --- 9. DIBUJADO DE GRÁFICO (Chart.js) ---
 
 function drawChart(config, data) {
     const ctx = document.getElementById(config.id).getContext('2d');
     
-    // Destruir instancia anterior si existe (para evitar superposición)
+    // Limpieza de memoria
     if (activeChartInstances[config.id]) {
         activeChartInstances[config.id].destroy();
     }
 
     let type = config.chartType === 'horizontalBar' ? 'bar' : config.chartType;
     let indexAxis = config.chartType === 'horizontalBar' ? 'y' : 'x';
-    // Apilar barras si hay leyenda
+    // Apilar si hay leyenda y es de barras
     let stacked = (config.legendCol && type === 'bar');
 
     const newChart = new Chart(ctx, {
@@ -438,7 +463,7 @@ function drawChart(config, data) {
                     }
                 },
                 datalabels: {
-                    // Ocultar etiquetas si hay muchas series apiladas
+                    // Ocultar etiquetas si está apilado para evitar ruido visual
                     display: !config.legendCol && type !== 'line',
                     color: '#444',
                     anchor: 'end',
@@ -465,7 +490,7 @@ function drawChart(config, data) {
     activeChartInstances[config.id] = newChart;
 }
 
-// --- 10. UTILIDADES Y HERRAMIENTAS ---
+// --- 10. UTILIDADES Y FORMATO ---
 
 function changePage(direction) {
     const totalPages = Math.ceil(savedCharts.length / itemsPerPage);
@@ -477,7 +502,7 @@ function changePage(direction) {
 }
 
 function delChart(id) {
-    if (confirm("¿Eliminar este gráfico?")) {
+    if (confirm("¿Estás seguro de eliminar este análisis?")) {
         savedCharts = savedCharts.filter(c => c.id !== id);
         renderCurrentPage();
     }
@@ -490,61 +515,82 @@ function downloadImg(id) {
     link.click();
 }
 
-function cleanNumber(v) {
-    if (typeof v === 'number') return v;
-    if (!v) return 0;
+function cleanNumber(val) {
+    if (typeof val === 'number') return val;
+    if (!val) return 0;
+    
     // Limpieza de moneda ($ 1.200,00 -> 1200.00)
-    let s = v.toString().replace(/[^\d.,-]/g, '');
+    let s = val.toString().replace(/[^\d.,-]/g, '');
+    
+    // Detectar formato latino (punto miles, coma decimal)
     if (s.lastIndexOf(',') > s.lastIndexOf('.')) {
-        s = s.replace(/\./g, '').replace(',', '.'); // Formato Latino
+        s = s.replace(/\./g, '').replace(',', '.');
     } else {
-        s = s.replace(/,/g, ''); // Formato USA
+        s = s.replace(/,/g, '');
     }
     return parseFloat(s) || 0;
 }
 
-function isDateColumn(v) {
-    if (!v) return false;
-    if (typeof v === 'number' && v > 20000) return true; // Excel Serial
-    if (typeof v === 'string' && (v.includes('/') || v.includes('-')) && !isNaN(Date.parse(v))) return true;
+function isDateColumn(val) {
+    if (!val) return false;
+    // Excel número serial
+    if (typeof val === 'number' && val > 20000) return true;
+    // Texto con separadores
+    if (typeof val === 'string' && (val.includes('/') || val.includes('-')) && !isNaN(Date.parse(val))) return true;
     return false;
 }
 
-function parseDate(d, mode) {
-    if (!d) return "ND";
+function parseDate(val, mode) {
+    if (!val) return "ND";
     let date;
     
-    // Parseo Excel Serial o Texto
-    if (typeof d === 'number' && d > 20000) {
-        date = new Date(Math.round((d - 25569) * 86400 * 1000));
+    // Caso Excel Serial
+    if (typeof val === 'number' && val > 20000) {
+        date = new Date(Math.round((val - 25569) * 86400 * 1000));
     } else {
-        date = new Date(d);
-        if (isNaN(date.getTime()) && typeof d === 'string' && d.includes('/')) {
-            const p = d.split('/');
+        date = new Date(val);
+        // Fix Latam DD/MM/YYYY
+        if (isNaN(date.getTime()) && typeof val === 'string' && val.includes('/')) {
+            const p = val.split('/');
             if (p.length === 3) date = new Date(p[2], p[1] - 1, p[0]);
         }
     }
 
-    if (!date || isNaN(date.getTime())) return d; // Fallback si no es fecha real
+    if (!date || isNaN(date.getTime())) return val;
 
-    // Modos de salida
+    // Retornos según modo
     if (mode === 'year') return date.getFullYear().toString();
     if (mode === 'iso') {
-        // YYYY-MM (Para filtros internos)
         return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
     }
     
     // Formato visual (Ene 24)
-    const ms = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-    return `${ms[date.getMonth()]} ${date.getFullYear().toString().substr(2)}`;
+    const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    return `${months[date.getMonth()]} ${date.getFullYear().toString().substr(2)}`;
 }
 
-function formatMoney(v) {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(v);
+function formatMoney(val) {
+    return new Intl.NumberFormat('pt-BR', { 
+        style: 'currency', 
+        currency: 'BRL', 
+        maximumFractionDigits: 0 
+    }).format(val);
 }
 
-function formatMoneyShort(v) {
-    if (v >= 1000000) return (v / 1000000).toFixed(1) + 'M';
-    if (v >= 1000) return (v / 1000).toFixed(0) + 'k';
-    return v;
+function formatMoneyShort(val) {
+    if (val >= 1000000) return (val / 1000000).toFixed(1) + 'M';
+    if (val >= 1000) return (val / 1000).toFixed(0) + 'k';
+    return val;
 }
+
+// --- 11. INICIALIZACIÓN MÓVIL ROBUSTA ---
+document.addEventListener('DOMContentLoaded', () => {
+    // Vincular botón menú
+    const menuBtn = document.getElementById('menu-toggle');
+    if (menuBtn) {
+        menuBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            toggleMenu();
+        });
+    }
+});
