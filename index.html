@@ -32,6 +32,10 @@
             <a onclick="showView('dashboard'); toggleMenuMobile()" id="nav-dashboard" class="list-group-item">
                 <i class="bi bi-pie-chart"></i> Tablero
             </a>
+            
+            <a href="#" class="list-group-item mt-3" data-bs-toggle="modal" data-bs-target="#manualModal">
+                <i class="bi bi-journal-text" style="color:var(--accent);"></i> Manual / Ayuda
+            </a>
         </div>
         
         <div class="mt-auto p-3">
@@ -50,7 +54,8 @@
                     <i class="bi bi-list" style="font-size: 1.5rem;"></i>
                 </button>
                 <span class="navbar-brand mb-0 h1 fw-bold">AlephGraf</span>
-                <div style="width: 40px;"></div> </div>
+                <div style="width: 40px;"></div>
+            </div>
         </nav>
 
         <div class="container-fluid p-4">
@@ -82,30 +87,23 @@
                     <div class="row g-3">
                         <div class="col-12 col-md-3">
                             <h6 class="fw-bold text-muted small text-uppercase mb-2">1. Filtros</h6>
-                            <select id="filterCol" class="form-select form-select-sm mb-2" onchange="loadFilterValues()">
-                                <option value="">(Ninguno)</option>
-                            </select>
-                            <select id="filterVal" class="form-select form-select-sm">
-                                <option value="">(Todo)</option>
-                            </select>
+                            <select id="filterCol" class="form-select form-select-sm mb-2" onchange="loadFilterValues()"><option value="">(Ninguno)</option></select>
+                            <select id="filterVal" class="form-select form-select-sm"><option value="">(Todo)</option></select>
                         </div>
-
                         <div class="col-12 col-md-3">
                             <h6 class="fw-bold text-muted small text-uppercase mb-2">2. Eje X (Grupos)</h6>
                             <select id="groupCol" class="form-select form-select-sm mb-2"></select>
                             <select id="dateMode" class="form-select form-select-sm">
-                                <option value="none">Texto (Nombres)</option>
-                                <option value="month">Agrupar Mes/Año</option>
-                                <option value="year">Agrupar Año</option>
+                                <option value="none">Texto</option>
+                                <option value="month">Mes/Año</option>
+                                <option value="year">Año</option>
                             </select>
                         </div>
-
                         <div class="col-12 col-md-3 bg-light rounded p-2">
                             <h6 class="fw-bold text-muted small text-uppercase mb-2">3. Leyenda</h6>
                             <select id="legendCol" class="form-select form-select-sm"></select>
                             <small class="text-muted d-block mt-1" style="font-size:0.7rem;">Para series múltiples (opcional)</small>
                         </div>
-
                         <div class="col-12 col-md-3">
                             <h6 class="fw-bold text-muted small text-uppercase mb-2">4. Valores (Y)</h6>
                             <select id="valueCol" class="form-select form-select-sm mb-2"></select>
@@ -114,9 +112,7 @@
                                 <option value="count">Recuento</option>
                                 <option value="avg">Promedio</option>
                             </select>
-                            <button class="btn btn-aleph w-100 btn-sm" onclick="calculatePreview()">
-                                Ver Datos
-                            </button>
+                            <button class="btn btn-aleph w-100 btn-sm" onclick="calculatePreview()">Ver Datos</button>
                         </div>
                     </div>
                 </div>
@@ -126,19 +122,17 @@
                     <div class="card-body">
                         <div class="table-responsive mb-3" style="max-height: 250px;">
                             <table class="table table-sm table-bordered table-hover small mb-0" id="previewTable">
-                                <thead class="table-light"></thead>
-                                <tbody></tbody>
+                                <thead class="table-light"></thead><tbody></tbody>
                             </table>
                         </div>
-                        
                         <div class="bg-light p-3 rounded border">
                             <div class="row g-2 align-items-end">
                                 <div class="col-12 col-md-5">
-                                    <label class="small fw-bold text-muted">Título del Gráfico</label>
-                                    <input type="text" id="chartTitle" class="form-control form-control-sm" placeholder="Ej: Ventas por Región">
+                                    <label class="small fw-bold text-muted">Título</label>
+                                    <input type="text" id="chartTitle" class="form-control form-control-sm">
                                 </div>
                                 <div class="col-6 col-md-3">
-                                    <label class="small fw-bold text-muted">Tipo Visual</label>
+                                    <label class="small fw-bold text-muted">Tipo</label>
                                     <select id="chartType" class="form-select form-select-sm">
                                         <option value="bar">Barras</option>
                                         <option value="horizontalBar">Horizontal</option>
@@ -165,21 +159,14 @@
                             <option value="4">4 por página</option>
                             <option value="1">1 por página</option>
                         </select>
-                        <button class="btn btn-outline-dark btn-sm" onclick="window.print()">
-                            <i class="bi bi-printer"></i>
-                        </button>
-                        <button class="btn btn-aleph btn-sm" onclick="showView('studio')">
-                            Nuevo Gráfico
-                        </button>
+                        <button class="btn btn-outline-dark btn-sm" onclick="window.print()"><i class="bi bi-printer"></i></button>
+                        <button class="btn btn-aleph btn-sm" onclick="showView('studio')">Nuevo</button>
                     </div>
                 </div>
-
-                <div id="dashboard-container" class="row g-4">
-                    </div>
-
+                <div id="dashboard-container" class="row g-4"></div>
                 <nav class="mt-4 no-print d-flex justify-content-center gap-2">
                     <button class="btn btn-sm btn-outline-secondary" onclick="changePage(-1)">Anterior</button>
-                    <span id="pageIndicator" class="align-self-center fw-bold small text-muted">Pág 1</span>
+                    <span id="pageIndicator" class="align-self-center fw-bold small text-muted">1</span>
                     <button class="btn btn-sm btn-outline-secondary" onclick="changePage(1)">Siguiente</button>
                 </nav>
             </div>
@@ -188,7 +175,88 @@
     </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<div class="modal fade" id="manualModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title"><i class="bi bi-book-half me-2"></i>Manual de Usuario AlephGraf Pro</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body p-4" style="font-family: 'Segoe UI', sans-serif; line-height: 1.6;">
+        
+        <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center">
+            <i class="bi bi-info-circle-fill me-3 fs-4"></i>
+            <div>
+                <strong>Bienvenido tester.</strong> Esta herramienta convierte archivos Excel en tableros de inteligencia de negocios (BI) directamente en el navegador.
+            </div>
+        </div>
+
+        <h5 class="text-primary fw-bold mt-4"><i class="bi bi-1-circle-fill me-2"></i>Paso 1: Conectar Datos</h5>
+        <p class="text-muted">Inicie cargando su fuente de datos. No se requiere servidor, todo ocurre en su PC.</p>
+        <ul class="list-group list-group-flush mb-3">
+            <li class="list-group-item px-0"><i class="bi bi-file-earmark-spreadsheet text-success me-2"></i><strong>Formatos:</strong> Excel (.xlsx) o Archivos separados por comas (.csv).</li>
+            <li class="list-group-item px-0"><i class="bi bi-table me-2"></i><strong>Estructura:</strong> La primera fila debe contener los títulos (ej: Fecha, Producto, Venta).</li>
+        </ul>
+
+        <hr>
+
+        <h5 class="text-primary fw-bold mt-4"><i class="bi bi-2-circle-fill me-2"></i>Paso 2: El Diseñador (Studio)</h5>
+        <p>Configure su gráfico utilizando las 4 columnas lógicas:</p>
+        
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <div class="p-3 bg-light rounded border h-100">
+                    <h6 class="fw-bold text-dark">1. Filtros (Opcional)</h6>
+                    <p class="small text-muted mb-0">Restringe los datos antes de graficar. Ej: Ver solo el año "2024" o solo la región "Norte".</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 bg-light rounded border h-100">
+                    <h6 class="fw-bold text-dark">2. Eje X (Agrupar)</h6>
+                    <p class="small text-muted mb-0">La base del gráfico. Si usa fechas, seleccione <em>"Tratamiento Fecha"</em> para agrupar por Mes o Año automáticamente.</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 bg-light rounded border h-100">
+                    <h6 class="fw-bold text-dark">3. Leyenda / Series</h6>
+                    <p class="small text-muted mb-0"><strong>¡Importante!</strong> Úselo para desglosar. Ej: Ver ventas por mes (Eje X) divididas por Vendedor (Leyenda). Crea barras de colores.</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 bg-light rounded border h-100">
+                    <h6 class="fw-bold text-dark">4. Valores (Eje Y)</h6>
+                    <p class="small text-muted mb-0">La columna numérica. Puede <strong>Sumar</strong> (totales), <strong>Contar</strong> (frecuencia) o <strong>Promediar</strong>.</p>
+                </div>
+            </div>
+        </div>
+        <p><em>Pulse <strong>"Ver Datos"</strong> para previsualizar antes de guardar.</em></p>
+
+        <hr>
+
+        <h5 class="text-primary fw-bold mt-4"><i class="bi bi-3-circle-fill me-2"></i>Paso 3: Tablero Interactivo</h5>
+        <ul>
+            <li class="mb-2"><strong>Interactividad Viva:</strong> Si aplicó filtros en el Studio, aparecerá un menú desplegable debajo del gráfico en el tablero. Cámbielo para actualizar el gráfico en tiempo real.</li>
+            <li class="mb-2"><strong>Opciones:</strong> Use el menú de tres puntos (⋮) en cada tarjeta para descargar la imagen PNG o eliminar el gráfico.</li>
+            <li class="mb-2"><strong>Vistas:</strong> Use el selector superior para ver 4 gráficos (cuadrícula) o 1 gráfico grande (detalle).</li>
+        </ul>
+
+        <div class="alert alert-secondary mt-4">
+            <h6 class="fw-bold"><i class="bi bi-phone me-2"></i>Modo Móvil</h6>
+            <p class="small mb-0">En celulares, el menú lateral se oculta. Use el botón de hamburguesa (☰) arriba a la izquierda para navegar.</p>
+        </div>
+
+      </div>
+      
+      <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Entendido</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script> <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
